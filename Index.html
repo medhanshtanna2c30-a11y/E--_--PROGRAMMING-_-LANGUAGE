@@ -1,0 +1,606 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E++ Studio</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255,255,255,0.86);
+      --panel-solid: #ffffff;
+      --text: #152033;
+      --muted: #5b6578;
+      --border: #d9e2ef;
+      --accent: #5b7cfa;
+      --accent-2: #7c4dff;
+      --good: #1f9d64;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --shadow: 0 16px 40px rgba(22, 34, 65, 0.10);
+      --radius: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1420;
+      --panel: rgba(18, 24, 36, 0.92);
+      --panel-solid: #121826;
+      --text: #eef3ff;
+      --muted: #98a4bf;
+      --border: #243049;
+      --accent: #7ea2ff;
+      --accent-2: #b388ff;
+      --shadow: 0 18px 46px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(91,124,250,0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(124,77,255,0.10), transparent 24%),
+        var(--bg);
+      color: var(--text);
+    }
+    .app {
+      min-height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+    .topbar, .panel {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .topbar {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 46px; height: 46px; border-radius: 16px;
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 18px;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 24px rgba(91,124,250,0.24);
+    }
+    .title h1 { margin: 0; font-size: 1.1rem; }
+    .title p { margin: 3px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .chip, select {
+      border: 1px solid var(--border);
+      background: var(--panel-solid);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform .08s ease, border-color .2s ease, background .2s ease;
+    }
+    button:hover, .chip:hover, select:hover { transform: translateY(-1px); border-color: var(--accent); }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+    }
+    button.ghost { background: transparent; }
+    .main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+      gap: 18px;
+      min-height: 0;
+    }
+    .left, .right { min-height: 0; display: grid; gap: 18px; }
+    .editorShell { padding: 16px; display: grid; gap: 12px; min-height: 0; }
+    .sectionHeader {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .sectionHeader h2 { margin: 0; font-size: 1rem; }
+    .sectionHeader span { color: var(--muted); font-size: 0.9rem; }
+    .editorWrap {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 440px;
+      background: rgba(0,0,0,0.04);
+    }
+    .lines {
+      background: rgba(127, 144, 177, 0.09);
+      color: var(--muted);
+      font-family: var(--mono);
+      padding: 14px 10px;
+      text-align: right;
+      overflow: hidden;
+      user-select: none;
+      white-space: pre;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    textarea {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      resize: none;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+      background: transparent;
+      min-height: 440px;
+      overflow: auto;
+    }
+    .split {
+      display: grid;
+      gap: 18px;
+      grid-template-rows: auto auto 1fr;
+      min-height: 0;
+    }
+    .card {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .examples { display: grid; gap: 10px; }
+    .exampleRow {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .exampleRow button { padding: 10px 12px; }
+    .status {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(127, 144, 177, 0.08);
+    }
+    .output, .explain {
+      background: rgba(127, 144, 177, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: grid;
+      min-height: 0;
+    }
+    .outputHead, .explainHead {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: rgba(127, 144, 177, 0.05);
+    }
+    .outputHead strong, .explainHead strong { font-size: 0.95rem; }
+    pre {
+      margin: 0;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: auto;
+      min-height: 0;
+    }
+    .explainBody { padding: 14px; color: var(--muted); line-height: 1.6; overflow: auto; }
+    .hintGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .hint {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(127, 144, 177, 0.06);
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .hint strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .footerNote { color: var(--muted); font-size: 0.9rem; }
+    .accentLine { color: var(--accent); font-weight: 700; }
+    @media (max-width: 980px) {
+      .main { grid-template-columns: 1fr; }
+      .hintGrid { grid-template-columns: 1fr; }
+      textarea { min-height: 360px; }
+      .editorWrap { min-height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">E++</div>
+        <div class="title">
+          <h1>E++ Studio</h1>
+          <p>Write, run, and learn E++ in one clean place.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" id="themeBtn">Toggle theme</button>
+        <button class="ghost" id="newBtn">New Project</button>
+        <button class="ghost" id="exampleBtn">Load Example</button>
+        <button class="primary" id="runBtn">Run E++</button>
+      </div>
+    </header><main class="main">
+  <section class="left">
+    <div class="panel editorShell">
+      <div class="sectionHeader">
+        <div>
+          <h2>Editor</h2>
+          <span>Auto-saved locally in your browser.</span>
+        </div>
+        <div class="status">
+          <span class="pill">Commands: show, set, if, else, repeat, ask</span>
+          <span class="pill">Shortcut: Ctrl / Cmd + Enter</span>
+        </div>
+      </div>
+      <div class="editorWrap">
+        <pre class="lines" id="lineNumbers">1</pre>
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+      <div class="footerNote">Tip: start with <span class="accentLine">show "Hello, world!"</span> and build from there.</div>
+    </div>
+
+    <div class="panel card">
+      <div class="sectionHeader">
+        <div>
+          <h2>Examples</h2>
+          <span>Tap one to load it into the editor.</span>
+        </div>
+      </div>
+      <div class="examples">
+        <div class="exampleRow">
+          <button data-example="hello">Hello</button>
+          <button data-example="calc">Calculator</button>
+          <button data-example="ifelse">If / Else</button>
+          <button data-example="repeat">Repeat</button>
+        </div>
+      </div>
+      <div class="hintGrid">
+        <div class="hint"><strong>show</strong> Prints text or a value to the output.</div>
+        <div class="hint"><strong>set</strong> Saves a value into a variable.</div>
+        <div class="hint"><strong>if / else / end</strong> Makes decisions.</div>
+        <div class="hint"><strong>repeat / end</strong> Runs code many times.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="right split">
+    <div class="panel output">
+      <div class="outputHead">
+        <strong>Output</strong>
+        <button id="clearOutBtn">Clear</button>
+      </div>
+      <pre id="output">Ready.</pre>
+    </div>
+
+    <div class="panel explain">
+      <div class="explainHead">
+        <strong>Explain Mode</strong>
+        <span id="stepInfo">No code running yet.</span>
+      </div>
+      <div class="explainBody" id="explainBody">
+        This panel will explain what each line is doing when you press Run.
+      </div>
+    </div>
+
+    <div class="panel card">
+      <div class="sectionHeader">
+        <div>
+          <h2>Next features to add</h2>
+          <span>Good roadmap for version 1.1.</span>
+        </div>
+      </div>
+      <div class="hintGrid">
+        <div class="hint"><strong>Functions</strong> make custom commands like <code>make greet(name)</code>.</div>
+        <div class="hint"><strong>Lists</strong> store multiple items in one variable.</div>
+        <div class="hint"><strong>Input</strong> can ask the user a question.</div>
+        <div class="hint"><strong>Projects</strong> can be saved and exported later.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+  </div>  <script>
+    const editor = document.getElementById('editor');
+    const output = document.getElementById('output');
+    const explainBody = document.getElementById('explainBody');
+    const stepInfo = document.getElementById('stepInfo');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const app = document.getElementById('app');
+    const STORAGE_KEY = 'eplus_studio_code_v1';
+    const THEME_KEY = 'eplus_theme_v1';
+
+    const examples = {
+      hello: `show "Hello, world!"\nshow "Welcome to E++"`,
+      calc: `set a = 12\nset b = 8\nset sum = a + b\nshow sum\nshow "Done"`,
+      ifelse: `set score = 10\nif score >= 10\n  show "Level unlocked"\nelse\n  show "Keep going"\nend`,
+      repeat: `repeat 3\n  show "E++"\nend`
+    };
+
+    function setTheme(theme) {
+      if (theme === 'dark') app.setAttribute('data-theme', 'dark');
+      else app.removeAttribute('data-theme');
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function toggleTheme() {
+      const dark = app.getAttribute('data-theme') === 'dark';
+      setTheme(dark ? 'light' : 'dark');
+    }
+
+    function updateLineNumbers() {
+      const lines = editor.value.split('\n').length || 1;
+      lineNumbers.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      syncScroll();
+    }
+
+    function syncScroll() {
+      lineNumbers.scrollTop = editor.scrollTop;
+      lineNumbers.scrollLeft = editor.scrollLeft;
+    }
+
+    function log(message) {
+      output.textContent += (output.textContent ? '\n' : '') + message;
+    }
+
+    function resetConsole() {
+      output.textContent = '';
+    }
+
+    function isQuoted(text) {
+      return (/^".*"$/s).test(text.trim()) || (/^'.*'$/s).test(text.trim());
+    }
+
+    function stripQuotes(text) {
+      const t = text.trim();
+      return t.slice(1, -1);
+    }
+
+    function safeExpr(expr, vars) {
+      const trimmed = expr.trim();
+      if (!trimmed) return '';
+      if (isQuoted(trimmed)) return stripQuotes(trimmed);
+      const allowed = /^[\w\s+\-*/%().,<>=!&|:'"?]+$/;
+      if (!allowed.test(trimmed)) throw new Error('Unsupported characters in expression');
+      const keys = Object.keys(vars).sort((a,b) => b.length - a.length);
+      let js = trimmed;
+      for (const key of keys) {
+        js = js.replace(new RegExp('\\b' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), `vars[${JSON.stringify(key)}]`);
+      }
+      try {
+        // eslint-disable-next-line no-new-func
+        return Function('vars', 'return (' + js + ');')(vars);
+      } catch (e) {
+        throw new Error('Bad expression: ' + expr);
+      }
+    }
+
+    function explain(text) {
+      explainBody.innerHTML = text;
+    }
+
+    function runEPP(source) {
+      const lines = source.replace(/\r/g, '').split('\n');
+      const vars = {};
+      let pc = 0;
+      const out = [];
+      const steps = [];
+      const loopStack = [];
+
+      function skipToElseOrEnd(start) {
+        let depth = 0;
+        for (let i = start + 1; i < lines.length; i++) {
+          const t = lines[i].trim();
+          if (/^if\b/.test(t) || /^repeat\b/.test(t)) depth++;
+          else if (t === 'end') {
+            if (depth === 0) return { index: i, kind: 'end' };
+            depth--;
+          } else if (t === 'else' && depth === 0) {
+            return { index: i, kind: 'else' };
+          }
+        }
+        return { index: lines.length, kind: 'end' };
+      }
+
+      while (pc < lines.length) {
+        const raw = lines[pc];
+        const line = raw.trim();
+        if (!line || line.startsWith('//') || line.startsWith('#')) { pc++; continue; }
+
+        if (/^show\b/.test(line)) {
+          const expr = line.slice(4).trim();
+          const value = safeExpr(expr, vars);
+          out.push(String(value));
+          steps.push({ line: pc + 1, text: `show prints: ${String(value)}` });
+          pc++;
+          continue;
+        }
+
+        if (/^set\b/.test(line)) {
+          const m = line.match(/^set\s+([A-Za-z_][\w]*)\s*=\s*(.+)$/);
+          if (!m) throw new Error(`Line ${pc + 1}: bad set command`);
+          const [, name, expr] = m;
+          const value = safeExpr(expr, vars);
+          vars[name] = value;
+          steps.push({ line: pc + 1, text: `set stores <b>${name}</b> = ${JSON.stringify(value)}` });
+          pc++;
+          continue;
+        }
+
+        if (/^ask\b/.test(line)) {
+          const m = line.match(/^ask\s+(.+?)\s+into\s+([A-Za-z_][\w]*)$/);
+          if (!m) throw new Error(`Line ${pc + 1}: bad ask command`);
+          const promptText = String(safeExpr(m[1], vars));
+          const target = m[2];
+          const answer = window.prompt(promptText, '') ?? '';
+          vars[target] = answer;
+          steps.push({ line: pc + 1, text: `ask stores the answer in <b>${target}</b>` });
+          pc++;
+          continue;
+        }
+
+        if (/^if\b/.test(line)) {
+          const condition = line.slice(2).trim();
+          const result = Boolean(safeExpr(condition, vars));
+          steps.push({ line: pc + 1, text: `if checks: <b>${condition}</b> → ${result ? 'true' : 'false'}` });
+          if (!result) {
+            const jump = skipToElseOrEnd(pc);
+            if (jump.kind === 'else') {
+              pc = jump.index + 1;
+            } else {
+              pc = jump.index + 1;
+            }
+          } else {
+            pc++;
+          }
+          continue;
+        }
+
+        if (line === 'else' || line === 'end') {
+          steps.push({ line: pc + 1, text: line === 'else' ? 'else switches to the alternate block.' : 'end closes a block.' });
+          pc++;
+          continue;
+        }
+
+        if (/^repeat\b/.test(line)) {
+          const m = line.match(/^repeat\s+(.+)$/);
+          const count = Number(safeExpr(m[1], vars));
+          if (!Number.isFinite(count) || count < 0) throw new Error(`Line ${pc + 1}: repeat needs a positive number`);
+          const depthStart = pc;
+          let depth = 0;
+          let endIndex = -1;
+          for (let i = pc + 1; i < lines.length; i++) {
+            const t = lines[i].trim();
+            if (/^repeat\b/.test(t) || /^if\b/.test(t)) depth++;
+            else if (t === 'end') {
+              if (depth === 0) { endIndex = i; break; }
+              depth--;
+            }
+          }
+          if (endIndex === -1) throw new Error(`Line ${pc + 1}: repeat block is missing end`);
+          const block = lines.slice(pc + 1, endIndex).join('\n');
+          steps.push({ line: pc + 1, text: `repeat runs the block ${count} times.` });
+          for (let i = 0; i < count; i++) {
+            const nested = runEPP(block);
+            nested.output.forEach(v => out.push(v));
+            nested.steps.forEach(s => steps.push({ line: s.line, text: `Loop ${i + 1}: ${s.text}` }));
+          }
+          pc = endIndex + 1;
+          continue;
+        }
+
+        throw new Error(`Line ${pc + 1}: unknown command → ${line}`);
+      }
+
+      return { output: out, steps, vars };
+    }
+
+    function renderExplanation(steps) {
+      if (!steps.length) {
+        stepInfo.textContent = 'Done.';
+        explain('The program finished successfully.');
+        return;
+      }
+      const parts = steps.map(s => `<div><b>Line ${s.line}</b>: ${s.text}</div>`).join('');
+      explain(parts);
+      const last = steps[steps.length - 1];
+      stepInfo.textContent = `Last step: line ${last.line}`;
+    }
+
+    function run() {
+      resetConsole();
+      try {
+        const result = runEPP(editor.value || '');
+        output.textContent = result.output.length ? result.output.join('\n') : '(no output)';
+        renderExplanation(result.steps);
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+        explain(`<div><b>Stopped</b>: ${err.message}</div>`);
+        stepInfo.textContent = 'An error happened.';
+      }
+    }
+
+    function loadExample(name) {
+      editor.value = examples[name];
+      updateLineNumbers();
+      save();
+      explain(`Loaded the <b>${name}</b> example. Press <b>Run E++</b> to test it.`);
+      stepInfo.textContent = 'Example loaded.';
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, editor.value);
+    }
+
+    function init() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      editor.value = saved || examples.hello;
+      updateLineNumbers();
+      const theme = localStorage.getItem(THEME_KEY) || 'light';
+      setTheme(theme);
+      explain('Type E++ code on the left. Press <b>Run E++</b> to see output and line-by-line explanation.');
+      output.textContent = 'Ready.';
+    }
+
+    editor.addEventListener('input', () => {
+      updateLineNumbers();
+      save();
+    });
+    editor.addEventListener('scroll', syncScroll);
+    editor.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        run();
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const value = editor.value;
+        editor.value = value.slice(0, start) + '  ' + value.slice(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        updateLineNumbers();
+        save();
+      }
+    });
+
+    document.getElementById('runBtn').addEventListener('click', run);
+    document.getElementById('clearOutBtn').addEventListener('click', () => {
+      output.textContent = '';
+      stepInfo.textContent = 'Output cleared.';
+    });
+    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+    document.getElementById('newBtn').addEventListener('click', () => {
+      editor.value = 'show "Hello, world!"\nset score = 10\nif score >= 10\n  show "Level unlocked"\nelse\n  show "Keep going"\nend';
+      updateLineNumbers();
+      save();
+      explain('Started a fresh project template.');
+      stepInfo.textContent = 'New project created.';
+    });
+    document.getElementById('exampleBtn').addEventListener('click', () => loadExample('ifelse'));
+    document.querySelectorAll('[data-example]').forEach(btn => {
+      btn.addEventListener('click', () => loadExample(btn.dataset.example));
+    });
+
+    init();
+  </script></body>
+</html>
