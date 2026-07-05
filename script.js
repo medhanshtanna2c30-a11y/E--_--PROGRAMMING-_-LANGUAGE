@@ -160,5 +160,7 @@ editor.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.ke
 if (e.key === 'Tab') { e.preventDefault(); const start = editor.selectionStart; const end = editor.selectionEnd; const value = editor.value; editor.value = value.slice(0, start) + '  ' + value.slice(end); editor.selectionStart = editor.selectionEnd = start + 2; updateLineNumbers(); save(); } });
 
 document.getElementById('runBtn').addEventListener('click', run); document.getElementById('clearOutBtn').addEventListener('click', () => { output.textContent = ''; stepInfo.textContent = 'Output cleared.'; }); document.getElementById('themeBtn').addEventListener('click', toggleTheme); document.getElementById('newBtn').addEventListener('click', () => { editor.value = 'show "Hello, world!"\nset score = 10\nif score >= 10\n  show "Level unlocked"\nelse\n  show "Keep going"\nend'; updateLineNumbers(); save(); explain('Started a fresh project template.'); stepInfo.textContent = 'New project created.'; }); document.getElementById('exampleBtn').addEventListener('click', () => loadExample('ifelse')); document.querySelectorAll('[data-example]').forEach(btn => { btn.addEventListener('click', () => loadExample(btn.dataset.example)); });
-
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
 init();
